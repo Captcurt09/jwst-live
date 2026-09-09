@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>James Webb Space Telescope Live</title>
+    <meta
+      name="description"
+      content="Live NASA TV and the latest official James Webb Space Telescope images from ESA/Webb."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Outfit:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="hero" id="hero">
+      <div class="hero-media" id="hero-media" aria-hidden="true"></div>
+      <div class="hero-overlay"></div>
+      <nav class="nav">
+        <span class="brand">JWST Live</span>
+        <div class="nav-links">
+          <a href="#tracker">Tracker</a>
+          <a href="#live">Live</a>
+          <a href="#gallery">Images</a>
+        </div>
+      </nav>
+      <div class="hero-copy">
+        <p class="eyebrow">NASA / ESA / CSA James Webb Space Telescope</p>
+        <h1>Looking deeper into the infrared universe</h1>
+        <p class="lede" id="hero-caption">
+          Loading the latest official Webb images…
+        </p>
+        <p class="note">
+          Webb does not stream a webcam. This site shows NASA’s live TV channel
+          and newly released science images as they are published.
+        </p>
+      </div>
+    </header>
+
+    <main>
+      <section class="tracker" id="tracker">
+        <div class="section-head">
+          <h2>Live position tracker</h2>
+          <p id="tracker-status">
+            Loading Webb’s orbit from NASA JPL Horizons…
+          </p>
+        </div>
+        <div class="tracker-stats" id="tracker-stats"></div>
+        <article class="orbit-card">
+          <svg id="orbit-plot" viewBox="0 0 800 520" role="img" aria-label="JWST halo orbit around L2"></svg>
+          <p class="orbit-caption" id="orbit-caption"></p>
+        </article>
+      </section>
+
+      <section class="streams" id="live">
+        <div class="section-head">
+          <h2>Live &amp; official video</h2>
+          <p>
+            NASA TV runs 24/7. Webb-specific coverage appears during mission
+            events. The second player shows the latest videos from the official
+            NASA Webb Telescope channel.
+          </p>
+        </div>
+        <div class="stream-grid">
+          <article class="player-card">
+            <div class="embed">
+              <iframe
+                src="https://www.youtube.com/embed/live_stream?channel=UCNwkvBoDag92nHiZBzbYicA"
+                title="NASA Live: Official Stream of NASA TV"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen
+              ></iframe>
+            </div>
+            <h3>NASA TV live</h3>
+            <p>
+              Agency live channel. JWST events air here when NASA covers them.
+              <a href="https://www.youtube.com/@NASA/live" target="_blank" rel="noopener noreferrer">Watch on YouTube</a>
+            </p>
+          </article>
+          <article class="player-card">
+            <div class="embed">
+              <iframe
+                src="https://www.youtube.com/embed/videoseries?list=UUfi4_aCc2nEhtUMSGqaim_Q"
+                title="NASA Webb Telescope channel videos"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen
+              ></iframe>
+            </div>
+            <h3>NASA Webb Telescope</h3>
+            <p>Official mission videos, image explainers, and science briefings.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="gallery-section" id="gallery">
+        <div class="section-head">
+          <h2>Latest Webb images</h2>
+          <p id="gallery-status">Fetching the ESA/Webb image feed…</p>
+        </div>
+        <div class="gallery" id="gallery-grid"></div>
+      </section>
+    </main>
+
+    <footer>
+      <p>
+        Images and video courtesy of NASA, ESA, CSA, and STScI. Orbit data from
+        NASA JPL Horizons. Not affiliated with those agencies.
+      </p>
+    </footer>
+
+    <div class="lightbox" id="lightbox">
+      <button class="lightbox-close" id="lightbox-close" type="button" aria-label="Close">
+        Close
+      </button>
+      <img id="lightbox-image" alt="" />
+      <div class="lightbox-meta">
+        <h3 id="lightbox-title"></h3>
+        <p class="lightbox-date" id="lightbox-date"></p>
+        <p id="lightbox-description"></p>
+        <a id="lightbox-link" href="#" target="_blank" rel="noopener noreferrer">
+          View official page
+        </a>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>

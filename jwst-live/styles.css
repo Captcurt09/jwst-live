@@ -1,0 +1,396 @@
+:root {
+  --bg: #05060a;
+  --bg-elevated: #10131c;
+  --gold: #d4b483;
+  --gold-strong: #e8c99a;
+  --text: #f3eee6;
+  --muted: #b7b0a4;
+  --line: rgba(212, 180, 131, 0.22);
+  --shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Outfit, system-ui, sans-serif;
+  line-height: 1.55;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+a {
+  color: var(--gold);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--gold-strong);
+}
+
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+.hero-media,
+.hero-media img,
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+}
+
+.hero-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 1.1s ease;
+}
+
+.hero-media img.is-visible {
+  opacity: 1;
+}
+
+.hero-overlay {
+  background:
+    linear-gradient(180deg, rgba(5, 6, 10, 0.35) 0%, rgba(5, 6, 10, 0.18) 40%, rgba(5, 6, 10, 0.92) 100%),
+    radial-gradient(circle at 20% 20%, rgba(212, 180, 131, 0.12), transparent 40%);
+}
+
+.nav,
+.hero-copy,
+.section-head,
+.stream-grid,
+.gallery,
+.tracker-stats,
+.orbit-card,
+footer {
+  position: relative;
+  z-index: 1;
+  width: min(1120px, calc(100% - 2.4rem));
+  margin-inline: auto;
+}
+
+.nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1.4rem;
+}
+
+.brand {
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  color: var(--gold);
+}
+
+.nav-links {
+  display: flex;
+  gap: 1.4rem;
+  font-size: 0.92rem;
+}
+
+.hero-copy {
+  padding: 0 0 4.5rem;
+}
+
+.eyebrow {
+  color: var(--gold);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  margin-bottom: 0.8rem;
+}
+
+h1,
+h2,
+h3 {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-weight: 500;
+  line-height: 1.12;
+}
+
+h1 {
+  font-size: clamp(2.6rem, 7vw, 5.4rem);
+  max-width: 14ch;
+  margin: 0 0 1rem;
+}
+
+.lede {
+  max-width: 42rem;
+  font-size: 1.12rem;
+  color: var(--text);
+}
+
+.note {
+  max-width: 38rem;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+main {
+  padding: 1rem 0 4rem;
+}
+
+.streams,
+.gallery-section,
+.tracker {
+  padding-top: 4rem;
+}
+
+.section-head h2 {
+  font-size: clamp(2rem, 4vw, 3rem);
+  margin: 0 0 0.6rem;
+}
+
+.section-head p {
+  color: var(--muted);
+  max-width: 42rem;
+}
+
+.stream-grid,
+.gallery {
+  display: grid;
+  gap: 1.2rem;
+  margin-top: 1.8rem;
+}
+
+.stream-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.player-card,
+.gallery-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.player-card h3,
+.player-card p {
+  margin: 0;
+  padding: 0 1.1rem;
+}
+
+.player-card h3 {
+  padding-top: 1rem;
+  font-size: 1.4rem;
+}
+
+.player-card p {
+  padding-bottom: 1.1rem;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.embed {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: #000;
+}
+
+.embed iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.gallery {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.gallery-card {
+  padding: 0;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.gallery-card img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+}
+
+.gallery-card div {
+  padding: 0.9rem 1rem 1.1rem;
+}
+
+.gallery-card h3 {
+  margin: 0 0 0.3rem;
+  font-size: 1.2rem;
+}
+
+.gallery-card time {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.tracker-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1.8rem;
+}
+
+.stat-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 1.1rem 1.15rem 1.2rem;
+  box-shadow: var(--shadow);
+}
+
+.stat-card .label {
+  display: block;
+  color: var(--gold);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.68rem;
+  margin-bottom: 0.45rem;
+}
+
+.stat-card .value {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  line-height: 1.15;
+}
+
+.stat-card .hint {
+  color: var(--muted);
+  font-size: 0.82rem;
+  margin-top: 0.35rem;
+}
+
+.orbit-card {
+  margin-top: 1.2rem;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(212, 180, 131, 0.08), transparent 36%),
+    var(--bg-elevated);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.orbit-card svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.orbit-caption {
+  margin: 0;
+  padding: 0.9rem 1.1rem 1.15rem;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+footer {
+  padding: 2rem 0 3rem;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(5, 6, 10, 0.96);
+  display: none;
+  grid-template-columns: minmax(0, 1.4fr) minmax(18rem, 0.8fr);
+  gap: 1.4rem;
+  align-items: center;
+  padding: 3.4rem 4vw 2rem;
+}
+
+.lightbox.is-open {
+  display: grid;
+}
+
+.lightbox img {
+  width: 100%;
+  max-height: 82vh;
+  object-fit: contain;
+  border-radius: 12px;
+}
+
+.lightbox-meta {
+  color: var(--text);
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 1rem;
+  right: 1.2rem;
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--gold);
+  border-radius: 999px;
+  padding: 0.4rem 0.9rem;
+  cursor: pointer;
+  font: inherit;
+}
+
+.lightbox-date,
+.lightbox-meta p {
+  color: var(--muted);
+}
+
+@media (max-width: 900px) {
+  .stream-grid,
+  .gallery,
+  .lightbox {
+    grid-template-columns: 1fr;
+  }
+
+  .tracker-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .gallery-card img {
+    height: 200px;
+  }
+
+  .lightbox {
+    overflow: auto;
+    align-items: start;
+    padding-top: 4rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .nav-links {
+    gap: 0.9rem;
+  }
+
+  .hero-copy {
+    padding-bottom: 3rem;
+  }
+
+  .tracker-stats {
+    grid-template-columns: 1fr;
+  }
+}
