@@ -15,7 +15,7 @@
       href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Outfit:wght@300;400;500;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=3" />
   </head>
   <body>
     <header class="hero" id="hero">
@@ -47,9 +47,10 @@
         <div class="section-head">
           <h2>Live position tracker</h2>
           <p id="tracker-status">
-            Loading Webb’s orbit from NASA JPL Horizons…
+            Loading Webb’s orbit and current observing target…
           </p>
         </div>
+        <article class="observation-card" id="now-observing"></article>
         <div class="tracker-stats" id="tracker-stats"></div>
         <article class="orbit-card">
           <svg id="orbit-plot" viewBox="0 0 800 520" role="img" aria-label="JWST halo orbit around L2"></svg>
@@ -130,6 +131,6 @@
       </div>
     </div>
 
-    <script src="app.js?v=2"></script>
+    <script src="app.js?v=3"></script>
   </body>
 </html>

@@ -10,6 +10,7 @@ const trackerStatus = document.getElementById("tracker-status");
 const trackerStats = document.getElementById("tracker-stats");
 const orbitPlot = document.getElementById("orbit-plot");
 const orbitCaption = document.getElementById("orbit-caption");
+const nowObserving = document.getElementById("now-observing");
 const lightbox = document.getElementById("lightbox");
 const lightboxImage = document.getElementById("lightbox-image");
 const lightboxTitle = document.getElementById("lightbox-title");
@@ -129,6 +130,95 @@ function svgEl(name, attrs) {
   const node = document.createElementNS("http://www.w3.org/2000/svg", name);
   Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, value));
   return node;
+}
+
+function prettyTarget(name) {
+  return (name || "").replace(/-/g, " ").replace(/\s+/g, " ").trim() || "Unknown target";
+}
+
+function formatVisitWhen(iso) {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+  return date.toUTCString().replace("GMT", "UTC").replace(/:\d{2} UTC$/, " UTC");
+}
+
+function renderObservation(data) {
+  const observation = data.observation;
+  nowObserving.replaceChildren();
+  if (!observation || observation.status === "unavailable") {
+    const label = document.createElement("span");
+    label.className = "label";
+    label.textContent = "Now observing";
+    const value = document.createElement("div");
+    value.className = "value";
+    value.textContent = "Schedule unavailable";
+    const hint = document.createElement("div");
+    hint.className = "hint";
+    hint.textContent = "The STScI weekly plan could not be loaded right now.";
+    nowObserving.append(label, value, hint);
+    return;
+  }
+  if (!observation.target) {
+    return;
+  }
+
+  const statusLabel =
+    observation.status === "observing"
+      ? "Now observing"
+      : observation.status === "between_visits"
+        ? "Recently observing"
+        : "Next planned target";
+
+  const label = document.createElement("span");
+  label.className = "label";
+  label.textContent = statusLabel;
+
+  const value = document.createElement("div");
+  value.className = "value";
+  value.textContent = prettyTarget(observation.target);
+
+  const details = [
+    observation.instrument,
+    observation.keywords || observation.category,
+  ].filter(Boolean);
+  const hint = document.createElement("div");
+  hint.className = "hint";
+  hint.textContent = details.join(" · ");
+  if (observation.program_url && observation.program_id) {
+    hint.append(" · ");
+    const link = document.createElement("a");
+    link.href = observation.program_url;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.textContent = `Program ${observation.program_id}`;
+    hint.appendChild(link);
+  }
+
+  const timing = document.createElement("div");
+  timing.className = "hint";
+  if (observation.status === "observing") {
+    timing.textContent = `Planned ${formatVisitWhen(observation.start)} through ${formatVisitWhen(observation.end)}.`;
+  } else if (observation.status === "between_visits") {
+    timing.textContent = `Last planned visit ended ${formatVisitWhen(observation.end)}.`;
+  } else {
+    timing.textContent = `Scheduled ${formatVisitWhen(observation.start)}.`;
+  }
+
+  nowObserving.append(label, value, hint, timing);
+
+  if (observation.next && observation.next.target) {
+    const next = document.createElement("div");
+    next.className = "next";
+    next.textContent = `Next: ${prettyTarget(observation.next.target)} · ${observation.next.instrument || ""} · ${formatVisitWhen(observation.next.start)}`;
+    nowObserving.appendChild(next);
+  }
+
+  const note = document.createElement("div");
+  note.className = "hint";
+  note.textContent = observation.note || "";
+  nowObserving.appendChild(note);
 }
 
 function renderStats(data) {
@@ -317,18 +407,14 @@ function renderOrbit(data) {
     "Ecliptic X/Y view of Webb’s halo around Sun–Earth L2. Path covers about 80 days from JPL Horizons.";
 }
 
-async function loadTracker() {
-  const response = await fetch("/api/tracker");
-  const data = await response.json();
-  if (!data.ok) {
-    throw new Error(data.error || "Tracker unavailable.");
-  }
-  return data;
-}
-
 async function refreshTracker() {
   try {
-    const data = await loadTracker();
+    const response = await fetch("/api/tracker");
+    const data = await response.json();
+    renderObservation(data);
+    if (!data.ok) {
+      throw new Error(data.error || "Tracker unavailable.");
+    }
     const when = new Date(data.observer.epoch).toUTCString().replace("GMT", "UTC");
     trackerStatus.textContent = `Live ephemeris from ${data.source}. Epoch ${when}.`;
     renderStats(data);

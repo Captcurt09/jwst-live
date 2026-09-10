@@ -23,10 +23,19 @@ PORT = 8000
 ROOT = Path(__file__).resolve().parent
 CACHE_TTL_S = 300
 TRACKER_CACHE_TTL_S = 90
+SCHEDULE_CACHE_TTL_S = 1800
 AU_KM = 149597870.7
 C_KM_S = 299792.458
 JWST_LAUNCH = datetime(2021, 12, 25, 12, 20, tzinfo=timezone.utc)
 HORIZONS_URL = "https://ssd.jpl.nasa.gov/api/horizons.api"
+STSCI_SCHEDULES = "https://www.stsci.edu/jwst/science-execution/observing-schedules"
+STSCI_HOST = "https://www.stsci.edu"
+SCHEDULE_HREF_RE = re.compile(
+    r'href=["\']([^"\']+_documents/\d{8}_report_[^"\']+\.txt)["\']',
+    re.I,
+)
+ISO_START_RE = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z")
+DURATION_RE = re.compile(r"(\d{2})/(\d{2}):(\d{2}):(\d{2})")
 ESA_FEED = "https://esawebb.org/images/feed/"
 NASA_SEARCH = (
     "https://images-api.nasa.gov/search"
@@ -42,6 +51,7 @@ WS_RE = re.compile(r"\s+")
 _cache_lock = threading.Lock()
 _cache: dict = {"payload": None, "expires": 0.0}
 _tracker_cache: dict = {"payload": None, "expires": 0.0}
+_schedule_cache: dict = {"visits": None, "url": None, "expires": 0.0}
 
 MONTHS = {
     "Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6,
@@ -357,6 +367,157 @@ def fetch_earth_from_l2(now: datetime) -> dict:
     return parse_vectors(result)[0]
 
 
+def latest_schedule_url(html: str) -> str:
+    matches = SCHEDULE_HREF_RE.findall(html)
+    if not matches:
+        raise RuntimeError("No STScI weekly schedule files found")
+    newest = max(matches, key=lambda href: re.search(r"(\d{8})_report", href).group(1))
+    if newest.startswith("http"):
+        return newest
+    return STSCI_HOST + newest
+
+
+def column_slices(dash_line: str) -> list[tuple[int, int]]:
+    slices = []
+    index = 0
+    length = len(dash_line)
+    while index < length:
+        if dash_line[index] == "-":
+            start = index
+            while index < length and dash_line[index] == "-":
+                index += 1
+            slices.append((start, index))
+        index += 1
+    return slices
+
+
+def parse_duration(text: str) -> timedelta:
+    match = DURATION_RE.search(text)
+    if not match:
+        raise ValueError("bad duration")
+    days, hours, minutes, seconds = (int(part) for part in match.groups())
+    return timedelta(days=days, hours=hours, minutes=minutes, seconds=seconds)
+
+
+def parse_schedule_visits(raw: str) -> list[dict]:
+    lines = raw.splitlines()
+    dash_line = next((line for line in lines if line.startswith("-----")), "")
+    if not dash_line:
+        raise RuntimeError("Schedule table header was missing")
+    slices = column_slices(dash_line)
+    visits = []
+    for line in lines:
+        if not ISO_START_RE.search(line):
+            continue
+        cells = []
+        for index, (start, end) in enumerate(slices):
+            if index == len(slices) - 1:
+                cells.append(line[start:].strip())
+            else:
+                cells.append(line[start:end].strip() if end <= len(line) else "")
+        while len(cells) < 9:
+            cells.append("")
+        start_text = cells[3]
+        duration_text = cells[4]
+        if not ISO_START_RE.fullmatch(start_text) or not DURATION_RE.search(duration_text):
+            continue
+        start = datetime.strptime(start_text, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+        visit_id = cells[0]
+        visits.append(
+            {
+                "visit_id": visit_id,
+                "program_id": visit_id.split(":")[0],
+                "visit_type": cells[2],
+                "start": start,
+                "end": start + parse_duration(duration_text),
+                "instrument": cells[5],
+                "target": cells[6],
+                "category": cells[7],
+                "keywords": cells[8],
+            }
+        )
+    if not visits:
+        raise RuntimeError("Schedule contained no timed visits")
+    return visits
+
+
+def serialize_visit(visit: dict | None) -> dict | None:
+    if not visit:
+        return None
+    return {
+        "visit_id": visit["visit_id"],
+        "program_id": visit["program_id"],
+        "visit_type": visit["visit_type"],
+        "start": visit["start"].strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "end": visit["end"].strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "instrument": visit["instrument"],
+        "target": visit["target"],
+        "category": visit["category"],
+        "keywords": visit["keywords"],
+        "program_url": (
+            "https://www.stsci.edu/jwst/science-execution/program-information"
+            f"?id={visit['program_id']}"
+        ),
+    }
+
+
+def load_schedule_visits() -> tuple[list[dict], str]:
+    now = time.time()
+    with _cache_lock:
+        if _schedule_cache["visits"] and now < _schedule_cache["expires"]:
+            return _schedule_cache["visits"], _schedule_cache["url"]
+
+    html = fetch_url(STSCI_SCHEDULES, timeout=30).decode("utf-8", "replace")
+    url = latest_schedule_url(html)
+    visits = parse_schedule_visits(fetch_url(url, timeout=30).decode("utf-8", "replace"))
+    with _cache_lock:
+        _schedule_cache["visits"] = visits
+        _schedule_cache["url"] = url
+        _schedule_cache["expires"] = time.time() + SCHEDULE_CACHE_TTL_S
+    return visits, url
+
+
+def current_observation(now: datetime) -> dict | None:
+    try:
+        visits, schedule_url = load_schedule_visits()
+    except (urllib.error.URLError, TimeoutError, ValueError, RuntimeError, OSError, AttributeError) as exc:
+        return {"status": "unavailable", "error": str(exc)}
+
+    current = None
+    previous = None
+    upcoming = None
+    for visit in visits:
+        if visit["end"] <= now:
+            previous = visit
+            continue
+        if visit["start"] <= now < visit["end"]:
+            current = visit
+            continue
+        upcoming = visit
+        break
+
+    if current:
+        status = "observing"
+        shown = current
+    elif previous:
+        status = "between_visits"
+        shown = previous
+    else:
+        status = "upcoming"
+        shown = upcoming
+
+    payload = serialize_visit(shown) or {}
+    payload.update(
+        {
+            "status": status,
+            "next": serialize_visit(upcoming if shown is not upcoming else None),
+            "schedule_url": schedule_url,
+            "note": "From STScI’s weekly plan. Actual observations can change.",
+        }
+    )
+    return payload
+
+
 def load_tracker() -> dict:
     now_ts = time.time()
     with _cache_lock:
@@ -364,6 +525,7 @@ def load_tracker() -> dict:
             return _tracker_cache["payload"]
 
     now = datetime.now(timezone.utc)
+    observation = current_observation(now)
     try:
         observer = fetch_observer(now)
         path = fetch_l2_path(now)
@@ -388,9 +550,10 @@ def load_tracker() -> dict:
             "current": current,
             "earth_from_l2": earth,
             "path": path,
+            "observation": observation,
         }
     except (urllib.error.URLError, TimeoutError, ValueError, RuntimeError, OSError, json.JSONDecodeError, KeyError, IndexError) as exc:
-        payload = {"ok": False, "error": str(exc), "path": []}
+        payload = {"ok": False, "error": str(exc), "path": [], "observation": observation}
 
     with _cache_lock:
         _tracker_cache["payload"] = payload
