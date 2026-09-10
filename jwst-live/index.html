@@ -8,6 +8,7 @@
       name="description"
       content="Live NASA TV and the latest official James Webb Space Telescope images from ESA/Webb."
     />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -69,24 +70,26 @@
           <article class="player-card">
             <div class="embed">
               <iframe
-                src="https://www.youtube.com/embed/live_stream?channel=UCNwkvBoDag92nHiZBzbYicA"
+                id="nasa-tv-player"
                 title="NASA Live: Official Stream of NASA TV"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerpolicy="strict-origin-when-cross-origin"
                 allowfullscreen
               ></iframe>
             </div>
             <h3>NASA TV live</h3>
             <p>
-              Agency live channel. JWST events air here when NASA covers them.
-              <a href="https://www.youtube.com/@NASA/live" target="_blank" rel="noopener noreferrer">Watch on YouTube</a>
+              Official NASA TV stream. JWST events air here when NASA covers them.
+              <a href="https://www.youtube.com/watch?v=21X5lGlDOfg" target="_blank" rel="noopener noreferrer">Watch on YouTube</a>
             </p>
           </article>
           <article class="player-card">
             <div class="embed">
               <iframe
-                src="https://www.youtube.com/embed/videoseries?list=UUfi4_aCc2nEhtUMSGqaim_Q"
+                id="webb-player"
                 title="NASA Webb Telescope channel videos"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerpolicy="strict-origin-when-cross-origin"
                 allowfullscreen
               ></iframe>
             </div>
@@ -127,6 +130,6 @@
       </div>
     </div>
 
-    <script src="app.js"></script>
+    <script src="app.js?v=2"></script>
   </body>
 </html>

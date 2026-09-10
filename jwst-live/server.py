@@ -426,6 +426,10 @@ class Handler(SimpleHTTPRequestHandler):
             return
         super().do_GET()
 
+    def end_headers(self):
+        self.send_header("Referrer-Policy", "strict-origin-when-cross-origin")
+        super().end_headers()
+
     def log_message(self, format, *args):
         print("[%s] %s" % (self.log_date_time_string(), format % args))
 

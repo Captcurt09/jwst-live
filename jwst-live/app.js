@@ -17,6 +17,18 @@ const lightboxDate = document.getElementById("lightbox-date");
 const lightboxDescription = document.getElementById("lightbox-description");
 const lightboxLink = document.getElementById("lightbox-link");
 const lightboxClose = document.getElementById("lightbox-close");
+const nasaTvPlayer = document.getElementById("nasa-tv-player");
+const webbPlayer = document.getElementById("webb-player");
+
+function setupPlayers() {
+  const origin = encodeURIComponent(window.location.origin);
+  if (nasaTvPlayer) {
+    nasaTvPlayer.src = `https://www.youtube.com/embed/21X5lGlDOfg?rel=0&origin=${origin}`;
+  }
+  if (webbPlayer) {
+    webbPlayer.src = `https://www.youtube.com/embed/videoseries?list=UUfi4_aCc2nEhtUMSGqaim_Q&rel=0&origin=${origin}`;
+  }
+}
 
 let heroIndex = 0;
 let heroTimer = null;
@@ -327,6 +339,7 @@ async function refreshTracker() {
 }
 
 async function init() {
+  setupPlayers();
   refreshTracker();
   window.setInterval(refreshTracker, TRACKER_REFRESH_MS);
   try {
