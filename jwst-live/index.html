@@ -15,7 +15,7 @@
       href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Outfit:wght@300;400;500;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=6" />
+    <link rel="stylesheet" href="styles.css?v=7" />
   </head>
   <body>
     <header class="hero" id="hero">
@@ -24,10 +24,10 @@
       <nav class="nav">
         <span class="brand">JWST Live</span>
         <div class="nav-links">
-          <a href="#tracker">Tracker</a>
-          <a href="#learn">Learn</a>
-          <a href="#live">Live</a>
-          <a href="#gallery">Images</a>
+          <a href="#tracker">Live Tracker</a>
+          <a href="#gallery">Latest Images</a>
+          <a href="#how-webb-works">How Webb Works</a>
+          <a href="#about">About JWST</a>
         </div>
       </nav>
       <div class="hero-copy">
@@ -46,7 +46,7 @@
     <main>
       <section class="tracker" id="tracker">
         <div class="section-head">
-          <h2>Live position tracker</h2>
+          <h2>Live Tracker</h2>
           <p id="tracker-status">
             Loading Webb’s orbit and current observing target…
           </p>
@@ -89,12 +89,13 @@
         </div>
       </section>
 
-      <section class="learn" id="learn">
+      <section class="learn" id="how-webb-works">
         <div class="section-head">
-          <h2>How this site works</h2>
+          <h2>How Webb Works</h2>
           <p>
-            Webb is a science observatory, not a webcam in space. Use this page
-            as a live classroom dashboard, then read the terms below.
+            Webb is a science observatory, not a webcam in space. These notes
+            explain the infrared light, the instruments, and why the telescope
+            lives so far from Earth.
           </p>
         </div>
         <div class="learn-grid">
@@ -107,90 +108,139 @@
               official pictures, not what the mirror is seeing this second.
             </p>
             <p>
-              NASA TV is a news and education channel. Webb appears there during
-              mission events. The second player is the official NASA Webb video
-              library, not a camera on the telescope.
-            </p>
-            <p>
-              This site combines three official sources: the ESA/Webb image
-              feed, NASA JPL Horizons for the orbit, and STScI’s weekly
-              observing schedule for the current target. Plans can change.
+              NASA TV is a news and education channel farther down this page.
+              Webb appears there during mission events. It is not a camera on
+              the telescope.
             </p>
           </article>
           <article class="lesson-card">
-            <h3>Classroom glossary</h3>
-            <dl class="glossary">
-              <div>
-                <dt>Infrared</dt>
-                <dd>
-                  Light that is redder than the eye can see. Dust, cool stars,
-                  and very distant galaxies glow strongly in infrared.
-                </dd>
-              </div>
-              <div>
-                <dt>L2</dt>
-                <dd>
-                  The Sun–Earth Lagrange point 2, a parking neighborhood far
-                  outside the Moon’s orbit where Webb can stay aligned with Earth.
-                </dd>
-              </div>
-              <div>
-                <dt>Halo orbit</dt>
-                <dd>
-                  Webb’s looping path around L2. The plot shows that path as
-                  seen in the ecliptic plane, the flat disk of the solar system.
-                </dd>
-              </div>
-              <div>
-                <dt>RA / Dec</dt>
-                <dd>
-                  Right ascension and declination: longitude and latitude on the
-                  sky, so astronomers can point to the same spot.
-                </dd>
-              </div>
-              <div>
-                <dt>Constellation</dt>
-                <dd>
-                  A named patch of sky. It tells you which direction Webb is
-                  facing from Earth, not that the target is a picture in that
-                  constellation’s myth.
-                </dd>
-              </div>
-              <div>
-                <dt>Light-travel time</dt>
-                <dd>
-                  How long radio signals take to reach Webb. At L2 that is
-                  usually a few seconds, not years; galaxy light is a separate,
-                  much longer journey.
-                </dd>
-              </div>
-              <div>
-                <dt>Instrument</dt>
-                <dd>
-                  The camera or spectrograph in use: NIRCam and NIRISS see
-                  near-infrared, MIRI sees mid-infrared heat, and NIRSpec splits
-                  light to measure composition.
-                </dd>
-              </div>
-              <div>
-                <dt>Observing program</dt>
-                <dd>
-                  A numbered science proposal on the STScI schedule. The program
-                  link opens the official description of that investigation.
-                </dd>
-              </div>
-            </dl>
+            <h3>Infrared light</h3>
+            <p>
+              Infrared is light that is redder than your eyes can see. Dust,
+              cool stars, and very distant galaxies glow strongly in infrared.
+              Webb’s sunshield keeps the telescope extremely cold so those faint
+              heat signals are not drowned out.
+            </p>
+            <p>
+              Released pictures paint that invisible light into colors we can
+              see. Shorter wavelengths are usually mapped to blue or purple;
+              longer wavelengths to orange or red. Tap any gallery image for
+              that mapping.
+            </p>
+          </article>
+          <article class="lesson-card">
+            <h3>The instruments</h3>
+            <p>
+              <strong>NIRCam</strong> is the main near-infrared camera. It takes
+              sharp pictures of stars, galaxies, and star-forming clouds.
+            </p>
+            <p>
+              <strong>MIRI</strong> sees mid-infrared heat: warm dust and cooler
+              objects that stay hidden in ordinary visible light.
+            </p>
+            <p>
+              <strong>NIRSpec</strong> splits light into a rainbow so scientists
+              can tell what an object is made of. <strong>NIRISS</strong>
+              studies faint galaxies and exoplanet atmospheres.
+            </p>
+          </article>
+          <article class="lesson-card">
+            <h3>Why Webb lives at L2</h3>
+            <p>
+              L2 is a gravitational balance point about 1.5 million kilometers
+              beyond Earth. From there the Sun and Earth stay in the same part
+              of the sky, so the sunshield can block their heat while the
+              telescope faces the cold dark.
+            </p>
+            <p>
+              Webb flies a halo orbit around that point so it never enters
+              Earth’s shadow. See the live path and distances in
+              <a href="#tracker">Live Tracker</a>.
+            </p>
           </article>
         </div>
+        <article class="lesson-card glossary-card">
+          <h3>Classroom glossary</h3>
+          <dl class="glossary">
+            <div>
+              <dt>Infrared</dt>
+              <dd>
+                Light that is redder than the eye can see. Dust, cool stars,
+                and very distant galaxies glow strongly in infrared.
+              </dd>
+            </div>
+            <div>
+              <dt>L2</dt>
+              <dd>
+                The Sun–Earth Lagrange point 2, a parking neighborhood far
+                outside the Moon’s orbit where Webb can stay aligned with Earth.
+              </dd>
+            </div>
+            <div>
+              <dt>Halo orbit</dt>
+              <dd>
+                Webb’s looping path around L2. The tracker plot shows that path
+                as seen in the ecliptic plane, the flat disk of the solar system.
+              </dd>
+            </div>
+            <div>
+              <dt>RA / Dec</dt>
+              <dd>
+                Right ascension and declination: longitude and latitude on the
+                sky, so astronomers can point to the same spot.
+              </dd>
+            </div>
+            <div>
+              <dt>Constellation</dt>
+              <dd>
+                A named patch of sky. It tells you which direction Webb is
+                facing from Earth, not that the target is a picture in that
+                constellation’s myth.
+              </dd>
+            </div>
+            <div>
+              <dt>Light-travel time</dt>
+              <dd>
+                How long radio signals take to reach Webb. At L2 that is
+                usually a few seconds, not years; galaxy light is a separate,
+                much longer journey.
+              </dd>
+            </div>
+            <div>
+              <dt>Instrument</dt>
+              <dd>
+                The camera or spectrograph in use: NIRCam and NIRISS see
+                near-infrared, MIRI sees mid-infrared heat, and NIRSpec splits
+                light to measure composition.
+              </dd>
+            </div>
+            <div>
+              <dt>Observing program</dt>
+              <dd>
+                A numbered science proposal on the STScI schedule. The program
+                link opens the official description of that investigation.
+              </dd>
+            </div>
+          </dl>
+        </article>
+      </section>
+
+      <section class="gallery-section" id="gallery">
+        <div class="section-head">
+          <h2>Latest Images</h2>
+          <p id="gallery-status">Fetching the ESA/Webb image feed…</p>
+        </div>
+        <div class="gallery" id="gallery-grid"></div>
       </section>
 
       <section class="streams" id="live">
         <div class="section-head">
           <h2>Live &amp; official video</h2>
           <p>
-            NASA TV runs 24/7. Webb-specific coverage appears during mission
-            events. The second player shows the latest videos from the official
-            NASA Webb Telescope channel.
+            NASA TV is a news and education channel, not a telescope camera. It
+            runs 24/7. Webb-specific coverage appears during mission events. The
+            second player shows videos from the official NASA Webb Telescope
+            channel.
           </p>
         </div>
         <div class="stream-grid">
@@ -226,12 +276,46 @@
         </div>
       </section>
 
-      <section class="gallery-section" id="gallery">
+      <section class="about" id="about">
         <div class="section-head">
-          <h2>Latest Webb images</h2>
-          <p id="gallery-status">Fetching the ESA/Webb image feed…</p>
+          <h2>About JWST</h2>
+          <p>
+            The James Webb Space Telescope is an international observatory built
+            to study the infrared universe — from nearby planets to the first
+            galaxies.
+          </p>
         </div>
-        <div class="gallery" id="gallery-grid"></div>
+        <div class="about-grid">
+          <article class="lesson-card">
+            <h3>The mission</h3>
+            <p>
+              Webb launched on 25 December 2021 and unfolded on the way to
+              Sun–Earth L2. Its gold-coated primary mirror is 6.5 meters across,
+              much larger than Hubble’s, and a tennis-court-sized sunshield keeps
+              the science instruments near 40 kelvin so they can see faint heat.
+            </p>
+            <p>
+              It is not a replacement webcam for Hubble. Hubble still sees
+              visible and ultraviolet light. Webb is built for infrared, which
+              lets it look through dust and farther back in time.
+            </p>
+          </article>
+          <article class="lesson-card">
+            <h3>Who built Webb</h3>
+            <p>
+              NASA leads the mission. ESA and CSA are partners: ESA provided the
+              Ariane 5 launch and the NIRSpec instrument; CSA provided the Fine
+              Guidance Sensor and NIRISS. Space Telescope Science Institute
+              (STScI) operates the observatory and publishes the observing
+              schedule this site uses.
+            </p>
+            <p>
+              This classroom site is not affiliated with those agencies. Images,
+              video, orbit data, and schedules come from their official public
+              feeds.
+            </p>
+          </article>
+        </div>
       </section>
     </main>
 

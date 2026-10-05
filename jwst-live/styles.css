@@ -81,6 +81,8 @@ a:hover {
 .tracker-stats,
 .lesson-grid,
 .learn-grid,
+.about-grid,
+.glossary-card,
 footer {
   position: relative;
   z-index: 1;
@@ -104,8 +106,10 @@ footer {
 
 .nav-links {
   display: flex;
-  gap: 1.4rem;
-  font-size: 0.92rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.75rem 1.3rem;
+  font-size: 0.9rem;
 }
 
 .hero-copy {
@@ -153,7 +157,8 @@ main {
 .streams,
 .gallery-section,
 .tracker,
-.learn {
+.learn,
+.about {
   padding-top: 4rem;
 }
 
@@ -258,7 +263,8 @@ main {
 }
 
 .lesson-grid,
-.learn-grid {
+.learn-grid,
+.about-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(16rem, 0.85fr);
   gap: 1.2rem;
@@ -320,7 +326,14 @@ main {
   margin-bottom: 0;
 }
 
-.glossary {
+.glossary-card {
+  margin-top: 1.2rem;
+}
+
+.glossary-card .glossary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.2rem 1.6rem;
   margin: 0;
 }
 
@@ -550,7 +563,8 @@ footer {
   .gallery,
   .lightbox,
   .lesson-grid,
-  .learn-grid {
+  .learn-grid,
+  .about-grid {
     grid-template-columns: 1fr;
   }
 
@@ -571,7 +585,13 @@ footer {
 
 @media (max-width: 640px) {
   .nav-links {
-    gap: 0.9rem;
+    gap: 0.55rem 0.85rem;
+    font-size: 0.82rem;
+    max-width: 16rem;
+  }
+
+  .glossary-card .glossary {
+    grid-template-columns: 1fr;
   }
 
   .hero-copy {
