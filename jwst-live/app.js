@@ -14,10 +14,7 @@ const nowObserving = document.getElementById("now-observing");
 const targetLessonBody = document.getElementById("target-lesson-body");
 const lightbox = document.getElementById("lightbox");
 const lightboxImage = document.getElementById("lightbox-image");
-const lightboxTitle = document.getElementById("lightbox-title");
-const lightboxDate = document.getElementById("lightbox-date");
-const lightboxDescription = document.getElementById("lightbox-description");
-const lightboxLink = document.getElementById("lightbox-link");
+const lightboxMeta = document.getElementById("lightbox-meta");
 const lightboxClose = document.getElementById("lightbox-close");
 const nasaTvPlayer = document.getElementById("nasa-tv-player");
 const webbPlayer = document.getElementById("webb-player");
@@ -62,13 +59,161 @@ function rotateHero() {
   setHeroImage(images[heroIndex], true);
 }
 
+const FILTER_COLORS = {
+  Purple: "#9b7dff",
+  Blue: "#4d8dff",
+  Cyan: "#4ecfcf",
+  Green: "#5dba6a",
+  Yellow: "#e0c35a",
+  Orange: "#e08a3c",
+  Red: "#d45b5b",
+  White: "#f3eee6",
+};
+
+function el(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) {
+    node.className = className;
+  }
+  if (text) {
+    node.textContent = text;
+  }
+  return node;
+}
+
+function lightboxSection(title, nodes) {
+  if (!nodes.length) {
+    return null;
+  }
+  const section = el("section", "lightbox-section");
+  section.append(el("h4", "", title), ...nodes);
+  return section;
+}
+
 function openLightbox(item) {
   lightboxImage.src = item.large || item.image;
   lightboxImage.alt = item.title;
-  lightboxTitle.textContent = item.title;
-  lightboxDate.textContent = [item.date, item.source].filter(Boolean).join(" · ");
-  lightboxDescription.textContent = item.description || "No description provided.";
-  lightboxLink.href = item.link || "#";
+  lightboxMeta.replaceChildren();
+
+  const heading = el("h3", "", item.title);
+  const date = el("p", "lightbox-date", [item.date, item.source].filter(Boolean).join(" · "));
+  lightboxMeta.append(heading, date);
+
+  const objectBits = [
+    item.object_name && `Name: ${item.object_name}`,
+    item.object_type && `Type: ${item.object_type}`,
+    item.constellation && `Constellation: ${item.constellation}`,
+  ].filter(Boolean);
+  const objectNodes = [];
+  if (objectBits.length) {
+    objectNodes.push(el("p", "lightbox-kicker", objectBits.join(" · ")));
+  }
+  if (item.visual) {
+    objectNodes.push(el("p", "", `What the picture shows: ${item.visual}`));
+  }
+  if (item.description) {
+    objectNodes.push(el("p", "", item.description));
+  }
+  const objectSection = lightboxSection("Object description", objectNodes);
+  if (objectSection) {
+    lightboxMeta.appendChild(objectSection);
+  }
+
+  const instrumentNodes = [];
+  if (item.instruments && item.instruments.length) {
+    const row = el("div", "instrument-row");
+    item.instruments.forEach((name) => row.appendChild(el("span", "instrument-chip", name)));
+    instrumentNodes.push(row);
+    instrumentNodes.push(
+      el("p", "", `${item.instruments.join(" and ")} collected the light for this image.`)
+    );
+  }
+  const instrumentSection = lightboxSection("Instruments used", instrumentNodes);
+  if (instrumentSection) {
+    lightboxMeta.appendChild(instrumentSection);
+  }
+
+  const scienceNodes = [];
+  if (item.science) {
+    scienceNodes.push(el("p", "", item.science));
+  }
+  const scienceSection = lightboxSection("Science significance", scienceNodes);
+  if (scienceSection) {
+    lightboxMeta.appendChild(scienceSection);
+  }
+
+  const colorNodes = [];
+  if (item.color_explanation) {
+    colorNodes.push(el("p", "", item.color_explanation));
+  }
+  if (item.filters && item.filters.length) {
+    const table = el("table", "filter-table");
+    const head = document.createElement("thead");
+    const headRow = document.createElement("tr");
+    ["Mapped color", "Wavelength", "Band", "Instrument"].forEach((label) => {
+      headRow.appendChild(el("th", "", label));
+    });
+    head.appendChild(headRow);
+    const body = document.createElement("tbody");
+    item.filters.forEach((filter) => {
+      const row = document.createElement("tr");
+      const colorCell = document.createElement("td");
+      const swatch = el("span", "color-swatch");
+      swatch.style.background = FILTER_COLORS[filter.color] || "var(--gold)";
+      colorCell.append(swatch, document.createTextNode(filter.color || "Assigned color"));
+      if (filter.feature) {
+        colorCell.append(document.createTextNode(` (${filter.feature})`));
+      }
+      row.append(
+        colorCell,
+        el("td", "", filter.wavelength || "—"),
+        el("td", "", filter.band || "Infrared"),
+        el("td", "", filter.instrument || "Webb")
+      );
+      body.appendChild(row);
+    });
+    table.append(head, body);
+    colorNodes.push(table);
+  }
+  const colorSection = lightboxSection("Color explanation (IR → visible)", colorNodes);
+  if (colorSection) {
+    lightboxMeta.appendChild(colorSection);
+  }
+
+  const downloads = (item.downloads && item.downloads.length
+    ? item.downloads
+    : [{ label: "Large image", url: item.large || item.image, size: "" }]
+  ).filter((file) => file && file.url);
+  const downloadList = el("ul", "download-list");
+  downloads.forEach((file) => {
+    const li = document.createElement("li");
+    const link = document.createElement("a");
+    link.href = file.url;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.textContent = file.label;
+    li.appendChild(link);
+    if (file.size) {
+      li.appendChild(el("span", "download-size", file.size));
+    }
+    downloadList.appendChild(li);
+  });
+  if (item.link) {
+    const official = document.createElement("li");
+    const link = document.createElement("a");
+    link.href = item.link;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.textContent = "Official ESA/Webb or NASA page";
+    official.appendChild(link);
+    downloadList.appendChild(official);
+  }
+  lightboxMeta.appendChild(lightboxSection("Download links", [downloadList]));
+
+  if (item.credit) {
+    lightboxMeta.appendChild(el("p", "lightbox-credit", `Credit: ${item.credit}`));
+  }
+
   lightbox.classList.add("is-open");
   document.body.style.overflow = "hidden";
 }
@@ -548,7 +693,7 @@ async function init() {
     const data = await loadImages();
     images = data.items;
     const sourceLabel = data.source === "esa" ? "ESA/Webb" : "NASA Images";
-    galleryStatus.textContent = `Latest official releases from ${sourceLabel}. Tap a photo for details.`;
+    galleryStatus.textContent = `Latest official releases from ${sourceLabel}. Tap a photo for the object, instruments, color mapping, and downloads.`;
     setHeroImage(images[0], false);
     renderGallery(images);
     heroTimer = window.setInterval(rotateHero, HERO_INTERVAL_MS);

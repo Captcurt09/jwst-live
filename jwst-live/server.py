@@ -18,13 +18,41 @@ from datetime import datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
 from html import unescape
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 PORT = 8000
 ROOT = Path(__file__).resolve().parent
-CACHE_TTL_S = 300
+CACHE_TTL_S = 600
 TRACKER_CACHE_TTL_S = 90
 SCHEDULE_CACHE_TTL_S = 1800
+GALLERY_ENRICH_LIMIT = 12
+ESA_HOST = "https://esawebb.org"
+INSTRUMENT_SLUGS = {
+    "nircam": "NIRCam",
+    "miri": "MIRI",
+    "nirspec": "NIRSpec",
+    "niriss": "NIRISS",
+    "fgs": "FGS",
+}
+INSTRUMENT_NAMES = tuple(INSTRUMENT_SLUGS.values())
+SKIP_OBJECT_CATEGORIES = {
+    "picture of the month",
+    "illustrations",
+    "launch",
+    "videos",
+    *{name.lower() for name in INSTRUMENT_NAMES},
+}
+CATEGORY_SCIENCE = {
+    "galaxies": "Galaxy images help scientists study how stars assemble, how clusters bend light, and how the universe looked billions of years ago.",
+    "nebulae": "Nebulae are clouds of gas and dust. Infrared pictures show where new stars are forming inside material that blocks visible light.",
+    "star formation": "Star-forming regions are dusty nurseries. Webb’s infrared cameras can see young stars still wrapped in that dust.",
+    "stars": "Stellar portraits show how stars live, age, and throw off gas. Infrared light is especially good at tracing cool material around them.",
+    "exoplanets": "Exoplanet programs watch light from other stars for tiny clues about planets and their atmospheres.",
+    "solar system": "Closer to home, Webb can study planets, moons, asteroids, and icy bodies by the heat they give off.",
+    "black holes": "Infrared observations can reveal stars and dust around supermassive black holes at the centers of galaxies.",
+    "cosmology": "Deep infrared views reach galaxies so distant that their light has been traveling since the early universe.",
+}
 AU_KM = 149597870.7
 C_KM_S = 299792.458
 JWST_LAUNCH = datetime(2021, 12, 25, 12, 20, tzinfo=timezone.utc)
@@ -102,7 +130,320 @@ def fetch_url(url: str, timeout: int = 20) -> bytes:
 
 def strip_html(value: str) -> str:
     text = TAG_RE.sub(" ", unescape(value or ""))
-    return WS_RE.sub(" ", text).strip()
+    text = WS_RE.sub(" ", text).strip()
+    return re.sub(r"\s+([,.;:!?])", r"\1", text)
+
+
+def absolute_url(href: str, page_url: str) -> str:
+    href = unescape(href or "").strip()
+    if not href or href.startswith("javascript:"):
+        return ""
+    if href.startswith("http://") or href.startswith("https://"):
+        return href
+    if href.startswith("/"):
+        return ESA_HOST + href
+    return urllib.parse.urljoin(page_url, href)
+
+
+def table_pairs(block: str) -> dict[str, str]:
+    pairs = {}
+    for heading, cell in re.findall(r"<th[^>]*>(.*?)</th>\s*<td[^>]*>(.*?)</td>", block, re.S | re.I):
+        key = strip_html(heading).rstrip(":").lower()
+        value = strip_html(re.sub(r"<br\s*/?>", ", ", cell, flags=re.I))
+        value = re.sub(r"\s*,\s*", ", ", value).strip(" ,")
+        if key:
+            pairs[key] = value
+    return pairs
+
+
+def unique_keep_order(values: list[str]) -> list[str]:
+    seen = set()
+    ordered = []
+    for value in values:
+        clean = value.strip()
+        if clean and clean not in seen:
+            seen.add(clean)
+            ordered.append(clean)
+    return ordered
+
+
+def infer_instruments(*texts: str) -> list[str]:
+    blob = " ".join(texts)
+    found = []
+    for name in INSTRUMENT_NAMES:
+        if re.search(rf"\b{re.escape(name)}\b", blob, re.I):
+            found.append(name)
+    return found
+
+
+def science_from_category(category: str) -> str:
+    haystack = (category or "").lower()
+    for key, text in CATEGORY_SCIENCE.items():
+        if key in haystack:
+            return text
+    return (
+        "Official Webb images are processed science data. They show structure, "
+        "temperature, and composition that would be invisible in an ordinary photograph."
+    )
+
+
+def color_explanation(image_type: str, filters: list[dict], title: str = "") -> str:
+    kind = f"{image_type} {title}".lower()
+    if "illustr" in kind or "artist" in kind or "graphic" in kind:
+        return (
+            "This is an artist’s concept or graphic, not a camera photograph, so there is no "
+            "infrared-to-visible filter mapping. Colors are chosen to explain an idea."
+        )
+    if not filters:
+        return (
+            "Webb records infrared light that human eyes cannot see. When a color table "
+            "is published, shorter wavelengths are usually painted blue or purple and "
+            "longer wavelengths orange or red so the structure becomes visible."
+        )
+    return (
+        "Webb does not see these colors. Each filter records infrared (or very red) "
+        "light at a specific wavelength. Image processors map shorter wavelengths to "
+        "cooler colors such as blue and purple, and longer wavelengths to warmer "
+        "colors such as orange and red. That mapping is how invisible heat becomes a "
+        "picture you can study."
+    )
+
+
+def parse_object_facts(html: str) -> dict:
+    match = re.search(r'id="About the Object".*?</table>', html, re.S | re.I)
+    pairs = table_pairs(match.group(0)) if match else {}
+    categories = [part.strip() for part in (pairs.get("category") or "").split(",") if part.strip()]
+    science_cats = [cat for cat in categories if cat.lower() not in SKIP_OBJECT_CATEGORIES]
+    instruments = []
+    for cat in categories:
+        slug = cat.lower().replace(" ", "")
+        if slug in INSTRUMENT_SLUGS:
+            instruments.append(INSTRUMENT_SLUGS[slug])
+        elif cat in INSTRUMENT_NAMES:
+            instruments.append(cat)
+    return {
+        "name": pairs.get("name") or "",
+        "constellation": pairs.get("constellation") or "",
+        "type": ", ".join(science_cats),
+        "instruments": unique_keep_order(instruments),
+    }
+
+
+def parse_image_facts(html: str) -> dict:
+    match = re.search(r">\s*About the Image\s*<.*?</table>", html, re.S | re.I)
+    pairs = table_pairs(match.group(0)) if match else {}
+    return {
+        "id": pairs.get("id") or "",
+        "type": pairs.get("type") or "",
+        "size": pairs.get("size") or "",
+    }
+
+
+def parse_caption_parts(html: str) -> tuple[str, str, str, str]:
+    match = re.search(
+        r"<h1[^>]*>.*?</h1>(.*?)(?:<strong>\s*Credit:</strong>|<div class=\"credit\">)",
+        html,
+        re.S | re.I,
+    )
+    block = match.group(1) if match else ""
+    visual = ""
+    visual_match = re.search(
+        r"\[\s*(?:<em>)?\s*Image Description:\s*(?:</em>)?\s*(.*?)\]",
+        block,
+        re.S | re.I,
+    )
+    if visual_match:
+        visual = strip_html(visual_match.group(1))
+        block = block[: visual_match.start()] + block[visual_match.end() :]
+    block = re.sub(r"<h3[^>]*>\s*Links\s*</h3>.*", "", block, flags=re.S | re.I)
+    paragraphs = []
+    for raw in re.findall(r"<p[^>]*>(.*?)</p>", block, re.S | re.I):
+        text = strip_html(raw)
+        if text and text.lower() not in {"links", "credit:"}:
+            paragraphs.append(text)
+    description = " ".join(paragraphs[:2])
+    science = " ".join(paragraphs[2:4])
+    credit_match = re.search(r'<div class="credit">(.*?)</div>', html, re.S | re.I)
+    credit = strip_html(credit_match.group(1)) if credit_match else ""
+    return description, science, visual, credit
+
+
+def parse_color_filters(html: str) -> list[dict]:
+    match = re.search(r'id="colours-filters-heading".*?</table>', html, re.S | re.I)
+    if not match:
+        return []
+    filters = []
+    rows = re.findall(r"<tr>(.*?)</tr>", match.group(0), re.S | re.I)[1:]
+    for row in rows:
+        cells = re.findall(r"<td\b[^>]*>(.*?)</td>", row, re.S | re.I)
+        if len(cells) < 3:
+            continue
+        color_match = re.search(r"\((Purple|Blue|Cyan|Green|Yellow|Orange|Red|White)\)", cells[0], re.I)
+        if not color_match:
+            class_match = re.search(r"band_([A-Za-z]+)", cells[0])
+            color = class_match.group(1) if class_match else ""
+        else:
+            color = color_match.group(1)
+        feature_match = re.search(r'band_instrument[^>]*>([^<]+)', cells[0], re.I)
+        instruments = infer_instruments(strip_html(cells[2]))
+        filters.append(
+            {
+                "band": strip_html(re.sub(r"<span class=\"band_instrument\".*?</span>", " ", cells[0], flags=re.S | re.I)),
+                "color": color.title() if color else "",
+                "wavelength": strip_html(cells[1]).replace("&mu;", "µ").replace("μ", "µ"),
+                "instrument": instruments[0] if instruments else "",
+                "feature": strip_html(feature_match.group(1)) if feature_match else "",
+            }
+        )
+    for item in filters:
+        item["band"] = re.sub(r"\s*\((Purple|Blue|Cyan|Green|Yellow|Orange|Red|White)\)\s*", "", item["band"], flags=re.I).strip()
+    return filters
+
+
+def parse_downloads(html: str, page_url: str) -> list[dict]:
+    match = re.search(r">Image Formats</h4>(.*?)<hr class=\"esohr\"\s*/>", html, re.S | re.I)
+    if not match:
+        return []
+    downloads = []
+    for href, label, size_html in re.findall(
+        r'archive_dl_text"><a href="([^"]+)">([^<]+)</a></span>\s*<span class="archive_dl_size">(.*?)</span>',
+        match.group(0),
+        re.S | re.I,
+    ):
+        url = absolute_url(href, page_url)
+        if not url:
+            continue
+        size = strip_html(re.sub(r"<a\b.*", "", size_html, flags=re.S | re.I))
+        downloads.append({"label": strip_html(label), "url": url, "size": size})
+    return downloads
+
+
+def empty_image_lesson() -> dict:
+    return {
+        "object_name": "",
+        "object_type": "",
+        "constellation": "",
+        "visual": "",
+        "science": "",
+        "instruments": [],
+        "filters": [],
+        "downloads": [],
+        "credit": "",
+        "image_type": "",
+        "color_explanation": color_explanation("", []),
+    }
+
+
+def apply_image_lesson(item: dict, lesson: dict | None = None) -> dict:
+    filled = empty_image_lesson()
+    filled.update(lesson or {})
+    if not filled["instruments"]:
+        filled["instruments"] = infer_instruments(
+            item.get("title") or "",
+            item.get("description") or "",
+            filled.get("science") or "",
+        )
+    if not filled["science"]:
+        filled["science"] = science_from_category(
+            filled.get("object_type") or item.get("title") or ""
+        )
+    filled["color_explanation"] = color_explanation(
+        filled.get("image_type") or "",
+        filled["filters"],
+        item.get("title") or "",
+    )
+    item.update(filled)
+    return item
+
+
+def enrich_esa_item(item: dict) -> None:
+    html = fetch_url(item["link"], timeout=25).decode("utf-8", "replace")
+    facts = parse_object_facts(html)
+    about = parse_image_facts(html)
+    description, science, visual, credit = parse_caption_parts(html)
+    filters = parse_color_filters(html)
+    instruments = unique_keep_order(facts["instruments"] + [row["instrument"] for row in filters if row.get("instrument")])
+    if description:
+        item["description"] = description
+    apply_image_lesson(
+        item,
+        {
+            "object_name": facts["name"],
+            "object_type": facts["type"],
+            "constellation": facts["constellation"],
+            "visual": visual,
+            "science": science,
+            "instruments": instruments,
+            "filters": filters,
+            "downloads": parse_downloads(html, item["link"]),
+            "credit": credit,
+            "image_type": about["type"],
+        },
+    )
+
+
+def nasa_downloads(nasa_id: str) -> list[dict]:
+    if not nasa_id:
+        return []
+    raw = fetch_url(f"https://images-api.nasa.gov/asset/{urllib.parse.quote(nasa_id)}", timeout=20)
+    data = json.loads(raw.decode("utf-8"))
+    downloads = []
+    for entry in data.get("collection", {}).get("items", []):
+        href = entry.get("href") or ""
+        name = href.rsplit("/", 1)[-1]
+        lower = name.lower()
+        if not href or "thumb" in lower:
+            continue
+        if "~orig" in lower or "orig." in lower:
+            label = "Original"
+        elif "~large" in lower:
+            label = "Large JPEG"
+        elif "~medium" in lower:
+            label = "Medium JPEG"
+        elif "~small" in lower:
+            continue
+        else:
+            label = name
+        downloads.append({"label": label, "url": href, "size": ""})
+        if len(downloads) >= 6:
+            break
+    return downloads
+
+
+def enrich_nasa_item(item: dict) -> None:
+    apply_image_lesson(
+        item,
+        {
+            "object_name": item.get("title") or "",
+            "object_type": ", ".join((item.get("keywords") or [])[:3]),
+            "science": item.get("description") or "",
+            "downloads": nasa_downloads(item.get("nasa_id") or ""),
+            "image_type": "Observation",
+        },
+    )
+
+
+def enrich_image_item(item: dict) -> dict:
+    try:
+        if item.get("source") == "ESA/Webb" and item.get("link"):
+            enrich_esa_item(item)
+        elif item.get("source") == "NASA Images":
+            enrich_nasa_item(item)
+        else:
+            apply_image_lesson(item)
+    except (urllib.error.URLError, TimeoutError, ValueError, RuntimeError, OSError, json.JSONDecodeError, AttributeError):
+        apply_image_lesson(item)
+    return item
+
+
+def enrich_gallery_items(items: list[dict]) -> None:
+    targets = items[:GALLERY_ENRICH_LIMIT]
+    if not targets:
+        return
+    with ThreadPoolExecutor(max_workers=6) as pool:
+        list(pool.map(enrich_image_item, targets))
+    for item in items[GALLERY_ENRICH_LIMIT:]:
+        apply_image_lesson(item)
 
 
 def format_date(value: str) -> str:
@@ -170,6 +511,8 @@ def parse_nasa_search(raw: bytes) -> list[dict]:
                 "image": thumb,
                 "large": large,
                 "source": "NASA Images",
+                "nasa_id": meta.get("nasa_id") or "",
+                "keywords": meta.get("keywords") or [],
             }
         )
     return items
@@ -195,9 +538,12 @@ def load_images() -> dict:
             error = f"ESA: {error}; NASA: {nasa_exc}"
             items = []
 
+    items = items[:24]
+    enrich_gallery_items(items)
+
     payload = {
         "source": source if items else "none",
-        "items": items[:24],
+        "items": items,
         "error": None if items else error,
         "updated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
     }

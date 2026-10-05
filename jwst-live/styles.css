@@ -409,16 +409,18 @@ footer {
   z-index: 1000;
   background: rgba(5, 6, 10, 0.96);
   display: none;
-  grid-template-columns: minmax(0, 1.4fr) minmax(18rem, 0.8fr);
+  grid-template-columns: minmax(0, 1.25fr) minmax(22rem, 0.9fr);
   gap: 1.4rem;
-  align-items: center;
-  padding: 3.4rem 4vw 2rem;
+  align-items: stretch;
+  padding: 3.6rem 4vw 2rem;
+  overflow: hidden;
 }
 
 .lightbox.is-open {
   display: grid;
 }
 
+.lightbox-visual img,
 .lightbox img {
   width: 100%;
   max-height: 82vh;
@@ -428,6 +430,100 @@ footer {
 
 .lightbox-meta {
   color: var(--text);
+  min-height: 0;
+  height: 100%;
+  overflow: auto;
+  padding-right: 0.4rem;
+}
+
+.lightbox-meta h3 {
+  margin: 0 0 0.35rem;
+  font-size: clamp(1.5rem, 3vw, 2.1rem);
+}
+
+.lightbox-section {
+  margin-top: 1rem;
+}
+
+.lightbox-section h4 {
+  margin: 0 0 0.4rem;
+  color: var(--gold);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-family: Outfit, system-ui, sans-serif;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.lightbox-kicker,
+.lightbox-credit {
+  font-size: 0.9rem;
+}
+
+.instrument-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.45rem;
+}
+
+.instrument-chip {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.2rem 0.65rem;
+  color: var(--gold-strong);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+}
+
+.filter-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  margin-top: 0.45rem;
+}
+
+.filter-table th,
+.filter-table td {
+  text-align: left;
+  padding: 0.35rem 0.4rem 0.35rem 0;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+
+.filter-table th {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.color-swatch {
+  display: inline-block;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 999px;
+  margin-right: 0.4rem;
+  vertical-align: middle;
+  box-shadow: 0 0 0 1px rgba(243, 238, 230, 0.2);
+}
+
+.download-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.download-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding: 0.28rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.92rem;
+}
+
+.download-size {
+  color: var(--muted);
+  white-space: nowrap;
 }
 
 .lightbox-close {
@@ -444,7 +540,8 @@ footer {
 }
 
 .lightbox-date,
-.lightbox-meta p {
+.lightbox-meta p,
+.lightbox-credit {
   color: var(--muted);
 }
 
