@@ -79,8 +79,8 @@ a:hover {
 .stream-grid,
 .gallery,
 .tracker-stats,
-.observation-card,
-.orbit-card,
+.lesson-grid,
+.learn-grid,
 footer {
   position: relative;
   z-index: 1;
@@ -152,7 +152,8 @@ main {
 
 .streams,
 .gallery-section,
-.tracker {
+.tracker,
+.learn {
   padding-top: 4rem;
 }
 
@@ -256,8 +257,17 @@ main {
   margin-top: 1.2rem;
 }
 
-.observation-card {
+.lesson-grid,
+.learn-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(16rem, 0.85fr);
+  gap: 1.2rem;
   margin-top: 1.8rem;
+  align-items: start;
+}
+
+.observation-card,
+.lesson-card {
   background: var(--bg-elevated);
   border: 1px solid var(--line);
   border-radius: 16px;
@@ -295,6 +305,46 @@ main {
   margin-left: 0.35rem;
 }
 
+.lesson-card h3 {
+  margin: 0 0 0.7rem;
+  font-size: 1.55rem;
+}
+
+.lesson-card p {
+  margin: 0 0 0.75rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.lesson-card p:last-child {
+  margin-bottom: 0;
+}
+
+.glossary {
+  margin: 0;
+}
+
+.glossary > div {
+  margin-bottom: 0.85rem;
+}
+
+.glossary > div:last-child {
+  margin-bottom: 0;
+}
+
+.glossary dt {
+  color: var(--gold);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.glossary dd {
+  margin: 0.2rem 0 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
 .stat-card {
   background: var(--bg-elevated);
   border: 1px solid var(--line);
@@ -325,7 +375,6 @@ main {
 }
 
 .orbit-card {
-  margin-top: 1.2rem;
   background:
     radial-gradient(circle at 30% 30%, rgba(212, 180, 131, 0.08), transparent 36%),
     var(--bg-elevated);
@@ -402,7 +451,9 @@ footer {
 @media (max-width: 900px) {
   .stream-grid,
   .gallery,
-  .lightbox {
+  .lightbox,
+  .lesson-grid,
+  .learn-grid {
     grid-template-columns: 1fr;
   }
 

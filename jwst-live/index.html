@@ -15,7 +15,7 @@
       href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Outfit:wght@300;400;500;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=3" />
+    <link rel="stylesheet" href="styles.css?v=4" />
   </head>
   <body>
     <header class="hero" id="hero">
@@ -25,6 +25,7 @@
         <span class="brand">JWST Live</span>
         <div class="nav-links">
           <a href="#tracker">Tracker</a>
+          <a href="#learn">Learn</a>
           <a href="#live">Live</a>
           <a href="#gallery">Images</a>
         </div>
@@ -50,12 +51,137 @@
             Loading Webb’s orbit and current observing target…
           </p>
         </div>
-        <article class="observation-card" id="now-observing"></article>
+        <div class="lesson-grid">
+          <article class="observation-card" id="now-observing"></article>
+          <aside class="lesson-card" id="target-lesson">
+            <h3>What is Webb looking at?</h3>
+            <div id="target-lesson-body">
+              <p>Loading the current observing plan…</p>
+            </div>
+          </aside>
+        </div>
         <div class="tracker-stats" id="tracker-stats"></div>
-        <article class="orbit-card">
-          <svg id="orbit-plot" viewBox="0 0 800 520" role="img" aria-label="JWST halo orbit around L2"></svg>
-          <p class="orbit-caption" id="orbit-caption"></p>
-        </article>
+        <div class="lesson-grid">
+          <article class="orbit-card">
+            <svg id="orbit-plot" viewBox="0 0 800 520" role="img" aria-label="JWST halo orbit around L2"></svg>
+            <p class="orbit-caption" id="orbit-caption"></p>
+          </article>
+          <aside class="lesson-card">
+            <h3>Why Webb lives at L2</h3>
+            <p>
+              L2 is a gravitational balance point about 1.5 million kilometers
+              beyond Earth, along the line from the Sun. From there, Earth and
+              the Sun stay in the same part of the sky, so Webb can keep its
+              sunshield toward the heat and its telescope toward the cold dark.
+            </p>
+            <p>
+              Webb does not sit still at L2. It flies a wide halo orbit around
+              that point, looping above and below Earth’s orbital plane. That
+              path never enters Earth’s shadow, so the solar panels keep power
+              and the telescope stays cold enough to see faint infrared light.
+            </p>
+            <p>
+              The “distance from Earth” number is the radio path to the
+              spacecraft. Light-travel time is how long a command or a picture
+              takes to cross that gap — about five seconds each way.
+            </p>
+          </aside>
+        </div>
+      </section>
+
+      <section class="learn" id="learn">
+        <div class="section-head">
+          <h2>How this site works</h2>
+          <p>
+            Webb is a science observatory, not a webcam in space. Use this page
+            as a live classroom dashboard, then read the terms below.
+          </p>
+        </div>
+        <div class="learn-grid">
+          <article class="lesson-card">
+            <h3>Why there is no live telescope video</h3>
+            <p>
+              Webb records infrared data and radios it to Earth. Teams at NASA,
+              ESA, CSA, and STScI calibrate those files before a color image is
+              released. That can take days or months, so the gallery shows new
+              official pictures, not what the mirror is seeing this second.
+            </p>
+            <p>
+              NASA TV is a news and education channel. Webb appears there during
+              mission events. The second player is the official NASA Webb video
+              library, not a camera on the telescope.
+            </p>
+            <p>
+              This site combines three official sources: the ESA/Webb image
+              feed, NASA JPL Horizons for the orbit, and STScI’s weekly
+              observing schedule for the current target. Plans can change.
+            </p>
+          </article>
+          <article class="lesson-card">
+            <h3>Classroom glossary</h3>
+            <dl class="glossary">
+              <div>
+                <dt>Infrared</dt>
+                <dd>
+                  Light that is redder than the eye can see. Dust, cool stars,
+                  and very distant galaxies glow strongly in infrared.
+                </dd>
+              </div>
+              <div>
+                <dt>L2</dt>
+                <dd>
+                  The Sun–Earth Lagrange point 2, a parking neighborhood far
+                  outside the Moon’s orbit where Webb can stay aligned with Earth.
+                </dd>
+              </div>
+              <div>
+                <dt>Halo orbit</dt>
+                <dd>
+                  Webb’s looping path around L2. The plot shows that path as
+                  seen in the ecliptic plane, the flat disk of the solar system.
+                </dd>
+              </div>
+              <div>
+                <dt>RA / Dec</dt>
+                <dd>
+                  Right ascension and declination: longitude and latitude on the
+                  sky, so astronomers can point to the same spot.
+                </dd>
+              </div>
+              <div>
+                <dt>Constellation</dt>
+                <dd>
+                  A named patch of sky. It tells you which direction Webb is
+                  facing from Earth, not that the target is a picture in that
+                  constellation’s myth.
+                </dd>
+              </div>
+              <div>
+                <dt>Light-travel time</dt>
+                <dd>
+                  How long radio signals take to reach Webb. At L2 that is
+                  usually a few seconds, not years; galaxy light is a separate,
+                  much longer journey.
+                </dd>
+              </div>
+              <div>
+                <dt>Instrument</dt>
+                <dd>
+                  The camera or spectrograph in use: NIRCam and NIRISS see
+                  near-infrared, MIRI sees mid-infrared heat, and NIRSpec splits
+                  light to measure composition.
+                </dd>
+              </div>
+              <div>
+                <dt>Observing program</dt>
+                <dd>
+                  A numbered science proposal on the STScI schedule. The program
+                  link opens the official description of that investigation.
+                </dd>
+              </div>
+            </dl>
+          </article>
+        </div>
       </section>
 
       <section class="streams" id="live">
@@ -131,6 +257,6 @@
       </div>
     </div>
 
-    <script src="app.js?v=3"></script>
+    <script src="app.js?v=4"></script>
   </body>
 </html>

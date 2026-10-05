@@ -11,6 +11,7 @@ const trackerStats = document.getElementById("tracker-stats");
 const orbitPlot = document.getElementById("orbit-plot");
 const orbitCaption = document.getElementById("orbit-caption");
 const nowObserving = document.getElementById("now-observing");
+const targetLessonBody = document.getElementById("target-lesson-body");
 const lightbox = document.getElementById("lightbox");
 const lightboxImage = document.getElementById("lightbox-image");
 const lightboxTitle = document.getElementById("lightbox-title");
@@ -134,6 +135,120 @@ function svgEl(name, attrs) {
 
 function prettyTarget(name) {
   return (name || "").replace(/-/g, " ").replace(/\s+/g, " ").trim() || "Unknown target";
+}
+
+function firstMatchingText(text, rules) {
+  const haystack = text || "";
+  const match = rules.find((rule) => rule.test.test(haystack));
+  return match ? match.text : "";
+}
+
+function instrumentLesson(instrument) {
+  return firstMatchingText(instrument, [
+    {
+      test: /MIRI/i,
+      text: "MIRI is the Mid-Infrared Instrument. It sees heat: warm dust, cooler stars, and objects that stay hidden in ordinary visible light.",
+    },
+    {
+      test: /NIRCam/i,
+      text: "NIRCam is Webb’s main near-infrared camera. It takes sharp pictures of stars, galaxies, and clouds where new stars are forming.",
+    },
+    {
+      test: /NIRSpec/i,
+      text: "NIRSpec is a spectrograph. Instead of one color picture, it splits an object’s light into a rainbow so scientists can tell what it is made of and how it is moving.",
+    },
+    {
+      test: /NIRISS/i,
+      text: "NIRISS studies faint galaxies and the atmospheres of planets around other stars by reading fingerprints in their light.",
+    },
+    {
+      test: /FGS/i,
+      text: "The Fine Guidance Sensor helps Webb stay locked on target so the science cameras can take a steady measurement.",
+    },
+  ]);
+}
+
+function topicLesson(topic) {
+  return firstMatchingText(topic, [
+    {
+      test: /supernova/i,
+      text: "A supernova remnant is the wreckage of a star that exploded. Infrared light can reveal dust and molecules forming in that debris.",
+    },
+    {
+      test: /exoplanet|transiting/i,
+      text: "An exoplanet is a planet orbiting another star. Webb often watches the star’s light for tiny changes that hint at the planet’s atmosphere.",
+    },
+    {
+      test: /galaxy|galaxies|high-redshift/i,
+      text: "Galaxies are huge collections of stars, gas, and dust. Infrared light lets Webb see through dust and pick out galaxies from the early universe.",
+    },
+    {
+      test: /star formation|young stars|protostar/i,
+      text: "Star-forming regions are dusty nurseries. Infrared light can pass through that dust, so Webb can see the young stars still wrapping up inside.",
+    },
+    {
+      test: /nebula/i,
+      text: "A nebula is a cloud of gas and dust. Webb’s infrared cameras show structure and heat that a backyard telescope cannot.",
+    },
+    {
+      test: /black hole|agn|quasar/i,
+      text: "Some galaxies hide a supermassive black hole. Infrared observations can study the hot dust and stars around that core.",
+    },
+    {
+      test: /solar system|asteroid|comet|kuiper/i,
+      text: "Closer to home, Webb can study asteroids, comets, and icy worlds by the heat they give off.",
+    },
+    {
+      test: /globular|star cluster/i,
+      text: "A globular cluster is a dense ball of hundreds of thousands of old stars. Infrared images can pick individual stars out of that crowd and study how they age.",
+    },
+    {
+      test: /stellar physics|stars/i,
+      text: "Stellar programs watch how stars live, age, and throw off gas. Infrared light is especially good at seeing cool material around those stars.",
+    },
+  ]);
+}
+
+function setLessonParagraphs(texts) {
+  targetLessonBody.replaceChildren();
+  texts.filter(Boolean).forEach((text) => {
+    const paragraph = document.createElement("p");
+    paragraph.textContent = text;
+    targetLessonBody.appendChild(paragraph);
+  });
+}
+
+function renderTargetLesson(observation) {
+  if (!observation || observation.status === "unavailable") {
+    setLessonParagraphs([
+      "The weekly plan from STScI could not be loaded. Webb still observes on a schedule, but this classroom dashboard cannot name the current target until that list is available.",
+      "Infrared means light that is redder than your eyes can see. Webb’s sunshield keeps the telescope extremely cold so those faint heat signals are not drowned out.",
+    ]);
+    return;
+  }
+  if (!observation.target) {
+    setLessonParagraphs([
+      "No timed visit is listed right now. Between pointings, Webb slews to the next target or takes calibration data.",
+    ]);
+    return;
+  }
+
+  const target = prettyTarget(observation.target);
+  const instrument = observation.instrument || "a science instrument";
+  const topic = [observation.keywords, observation.category].filter(Boolean).join(" ");
+  const statusLead =
+    observation.status === "observing"
+      ? `Right now the plan says Webb is looking at ${target} with ${instrument}.`
+      : observation.status === "between_visits"
+        ? `Webb recently finished a planned visit to ${target} with ${instrument}.`
+        : `The next listed target is ${target}, using ${instrument}.`;
+
+  setLessonParagraphs([
+    statusLead,
+    instrumentLesson(instrument),
+    topicLesson(topic),
+    "Webb sees infrared light, not a normal color movie. Dust, cool stars, and very distant galaxies glow in infrared, which is why a target like this can be studied even when it looks dark to the human eye.",
+  ]);
 }
 
 function formatVisitWhen(iso) {
@@ -412,6 +527,7 @@ async function refreshTracker() {
     const response = await fetch("/api/tracker");
     const data = await response.json();
     renderObservation(data);
+    renderTargetLesson(data.observation);
     if (!data.ok) {
       throw new Error(data.error || "Tracker unavailable.");
     }

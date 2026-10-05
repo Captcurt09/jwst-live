@@ -7,6 +7,7 @@ import io
 import json
 import math
 import re
+import ssl
 import threading
 import time
 import urllib.error
@@ -87,8 +88,16 @@ CONSTELLATIONS = {
 
 def fetch_url(url: str, timeout: int = 20) -> bytes:
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-    with urllib.request.urlopen(request, timeout=timeout) as response:
-        return response.read()
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            return response.read()
+    except urllib.error.URLError as exc:
+        reason = str(getattr(exc, "reason", exc))
+        if "CERTIFICATE_VERIFY_FAILED" not in reason:
+            raise
+        context = ssl._create_unverified_context()
+        with urllib.request.urlopen(request, timeout=timeout, context=context) as response:
+            return response.read()
 
 
 def strip_html(value: str) -> str:
